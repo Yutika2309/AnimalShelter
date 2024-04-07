@@ -2,11 +2,13 @@ from django.db import models
 from django.contrib.auth.models import (AbstractBaseUser, 
                                        BaseUserManager,
                                        PermissionsMixin)
-
 from django.utils.crypto import get_random_string
+
 
 # Create your models here.
 
+
+## MODELS FOR INTERNAL USE
 class ShelterUserManager(BaseUserManager):
     """
         description: User manager for the Animal Shelter
@@ -39,7 +41,7 @@ class ShelterUser(AbstractBaseUser):
     USER_TYPES = (
         ('admin', 'Admin'),
         ('shelterstaff', 'Shelter-Staff'),
-        ('adopter', 'Adopter')
+        ('adopter_or_foster', 'Adopter-or-foster-parent')
     )
 
     email = models.EmailField(unique=True)
@@ -93,7 +95,7 @@ class AnimalOnboarding(models.Model):
     distinctive_features = models.CharField(max_length=50, null=True, blank=True)
     micro_chipped = models.BooleanField(default=False)
     registered_by = models.ForeignKey(ShelterUser, on_delete=models.CASCADE, related_name='registered_animals') #one user can register multiple animals; one-to-many
-    cage_id = models.CharField(max_length=20, unique=True)  # Unique Cage ID for the animal
+    cage_id = models.CharField(max_length=20, unique=True)  #unique Cage ID for the animal
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -171,7 +173,7 @@ class PreviousOwnerInfo(models.Model):
         ('unable_to_care_for', 'Unable-to-care-for')
     )
 
-    animal_ = models.ForeignKey(AnimalOnboarding, on_delete=models.CASCADE, related_name='previous_owner_info')
+    animal = models.ForeignKey(AnimalOnboarding, on_delete=models.CASCADE, related_name='previous_owner_info')
     previous_owner_known = models.BooleanField(default=True)
     name_of_previous_owner = models.CharField(max_length=50, null=True, blank=True)
     reason_for_intake = models.CharField(max_length=50, null=False, choices=INTAKE_REASON_CHOICES)
@@ -182,9 +184,9 @@ class PreviousOwnerInfo(models.Model):
         return super(PreviousOwnerInfo, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"Created instance for: {self.animal_}"
+        return f"Created instance for: {self.animal}"
 
-
+    
 class ShelterAssessment(models.Model):
     """
         description: Shelter assessment by staff
@@ -208,3 +210,35 @@ class ShelterAssessment(models.Model):
 
     def __str__(self):
         return self.cage_id
+
+
+# MODELS FOR INTERESTED ADOPTERS
+class PotentialAdopterInfo(models.Model):
+    """
+        description: Potential adopter information
+        created by: @Yutika Rege
+        date: 7th April 2024
+    """
+    
+    PREFERRED_SPECIES_CHOICES = (
+        ('dog', 'Dog'),
+        ('cat', 'Cat'),
+        ('bird', 'Bird'),
+        ('other', 'Other')
+    )
+
+    name = models.ForeignKey(ShelterUser, on_delete=models.CASCADE) #could be a name from the registered users - staff/adopters/superuse/admin
+    only_foster = models.BooleanField(default=False) #whether the applicant wants to only foster or eventually adopt
+    address = models.TextField(max_length=100, null=False, blank=False) #volunteers at the shelter need to visit the house of potential adopter
+    first_time_owner = models.BooleanField(default=True)
+    have_other_pets = models.BooleanField(default=False)
+    preferred_species = models.CharField(choices=PREFERRED_SPECIES_CHOICES, default='dog')
+    is_family = models.BooleanField(default=False)
+    
+    def save(self, *args, **kwargs):
+        return super(PotentialAdopterInfo, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Created adopter for: {self.name}"
+    
+
