@@ -2,3 +2,4 @@ data/
 notebooks/.env
 ml_models/
 animalshelterproject/__pycache__
+core/__pycache__

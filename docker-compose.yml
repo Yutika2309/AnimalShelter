@@ -1,0 +1,36 @@
+version: "3.10"
+
+services:
+  db:
+    image: postgres
+    ports:
+      - "5433:5433"
+    environment:
+      - PGHOST=host.docker.internal
+      - PGPORT=5433
+      - PGUSER=postgres
+      - POSTGRES_DB=animal_shelter_db
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data 
+    networks:
+      - animal_shelter_services
+    
+  web:
+    container_name: animalshelter
+    build: .
+    command: >
+      bash -c """
+              python manage.py runserver 0.0.0.0:8000
+              """
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    networks:
+      - animal_shelter_services
+    
+networks:
+  animal_shelter_services:

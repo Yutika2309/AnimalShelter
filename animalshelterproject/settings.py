@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-kcd32^4%7vc8x6efner^@_xdek4&acpmm+o$%f4b@$*cwsuu0n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
@@ -74,11 +76,16 @@ WSGI_APPLICATION = 'animalshelterproject.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+   'default': {
+       'ENGINE': 'django.db.backends.postgresql', 
+       'NAME': 'animal_shelter_db',
+       'USER': 'postgres',
+       'PASSWORD': 'postgres',
+       'HOST': 'db', 
+       'PORT': '5433',
+   }
 }
+
 
 
 # Password validation
