@@ -96,14 +96,12 @@ class AnimalOnboarding(models.Model):
     micro_chipped = models.BooleanField(default=False)
     registered_by = models.ForeignKey(ShelterUser, on_delete=models.CASCADE, related_name='registered_animals') #one user can register multiple animals; one-to-many
     cage_id = models.CharField(max_length=20, unique=True)  #unique Cage ID for the animal
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+  
 
     def save(self, *args, **kwargs):
         if not self.animal_id:
             self.animal_id = self.species + "_" + get_random_string(4)
         if not self.cage_id:
-            # Generate a unique cage ID for the animal
             self.cage_id = f"CAGE_{self.animal_id}"
         return super().save(*args, **kwargs)
 
@@ -152,7 +150,7 @@ class AnimalHealth(models.Model):
     any_aggresive_incidents = models.BooleanField(default=False)
     is_neutered = models.BooleanField(default=False)
     other_observations = models.TextField(max_length=200, null=True, blank=True)
-    
+
     def save(self, *args, **kwargs):
         return super(AnimalHealth, self).save(*args, **kwargs)
 
@@ -201,7 +199,7 @@ class ShelterAssessment(models.Model):
 
     animal = models.ForeignKey(AnimalOnboarding, on_delete=models.CASCADE, related_name='shelter_assessments')
     cage_id = models.CharField(max_length=20)  #cage ID from AnimalOnboarding
-    recommended_next_steps = models.CharField(max_length=100, choices=NEXT_STEPS_CHOICES)  # Recommended next steps
+    recommended_next_steps = models.CharField(max_length=100, choices=NEXT_STEPS_CHOICES)  
 
     def save(self, *args, **kwargs):
         if not self.cage_id:
@@ -209,7 +207,7 @@ class ShelterAssessment(models.Model):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.cage_id
+        return f"Created Cage ID: {self.cage_id}"
 
 
 # MODELS FOR INTERESTED ADOPTERS
@@ -233,12 +231,32 @@ class PotentialAdopterInfo(models.Model):
     first_time_owner = models.BooleanField(default=True)
     have_other_pets = models.BooleanField(default=False)
     preferred_species = models.CharField(choices=PREFERRED_SPECIES_CHOICES, default='dog')
-    is_family = models.BooleanField(default=False)
+    is_a_family = models.BooleanField(default=False)
     
     def save(self, *args, **kwargs):
         return super(PotentialAdopterInfo, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"Created adopter for: {self.name}"
-    
+
+
+class HomeInspectionPreAdoption(models.Model):
+    """
+        description: Vetting of house condition before adoption
+        created by: @Yutika Rege
+        date: 9th April 2024
+    """
+
+    name_of_inspector = models.ForeignKey(ShelterUser, on_delete=models.CASCADE, null=False)
+    name_of_applicant = models.ForeignKey(PotentialAdopterInfo, on_delete=models.CASCADE, null=True)
+    applicant_eligible_to_adopt = models.BooleanField(default=True, null=False)
+    other_remarks = models.TextField(max_length=100, null=True)
+
+    def save(self, *args, **kwargs):
+        return super(HomeInspectionPreAdoption, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Created inspection by: {self.name_of_inspector}"
+
+
 
