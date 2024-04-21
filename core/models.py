@@ -57,6 +57,9 @@ class ShelterUser(AbstractBaseUser):
 
     objects = ShelterUserManager()
     USERNAME_FIELD = 'email'
+    
+    class Meta:
+        ordering = ['created_at']
 
     def __str__(self):
         if self.name:
