@@ -260,6 +260,78 @@ class HomeInspectionPreAdoption(models.Model):
 
     def __str__(self):
         return f"Created inspection by: {self.name_of_inspector}"
+    
+
+class OutcomePrediction(models.Model):
+    """
+        description: Model for predicting the outcome for a pet
+        created by: @Yutika Rege
+        date: 28th April 2024
+    """
+    ANIMAL_TYPE_CHOICES = [
+        (0, 'Bird'),
+        (1, 'Cat'),
+        (2, 'Dog'),
+        (3, 'Other')
+    ]
+    INTAKE_CONDITION_CHOICES = [
+        (0, 'Injured'),
+        (1, 'Normal'),
+        (2, 'Other'),
+        (3, 'Sick')
+    ]
+    INTAKE_TYPE_CHOICES = [
+        (0, 'Euthanasia Request'),
+        (1, 'Owner Surrender'),
+        (2, 'Public Assist'),
+        (3, 'Stray'),
+        (4, 'Wildlife')
+    ]
+    SEX_UPON_INTAKE_CHOICES = [
+        (0, 'Intact Female'),
+        (1, 'Intact Male'),
+        (2, 'Neutered Male'),
+        (3, 'Spayed Female'),
+        (4, 'Unknown')
+    ]
+    INTAKE_WEEKDAY_CHOICES = [
+        (0, 'Friday'),
+        (1, 'Monday'),
+        (2, 'Saturday'),
+        (3, 'Sunday'),
+        (4, 'Thursday'),
+        (5, 'Tuesday'),
+        (6, 'Wednesday')
+    ]
+    OUTCOME_TYPE_CHOICES = [
+        (0, 'Adoption'),
+        (1, 'Euthanasia'),
+        (2, 'Other'),
+        (3, 'Return to Owner'),
+        (4, 'Transfer')
+    ]
+    TIME_OF_DAY_OF_INTAKE_CHOICES = [
+        (0, 'Afternoon'),
+        (1, 'Early morning'),
+        (2, 'Evening'),
+        (3, 'Late morning'),
+        (4, 'Night-time')
+    ]
+    
+    animal_type = models.IntegerField(choices=ANIMAL_TYPE_CHOICES)
+    intake_condition = models.IntegerField(choices=INTAKE_CONDITION_CHOICES)
+    intake_type = models.IntegerField(choices=INTAKE_TYPE_CHOICES)
+    sex_upon_intake = models.IntegerField(choices=SEX_UPON_INTAKE_CHOICES)
+    age_upon_intake_years = models.FloatField()
+    intake_month = models.IntegerField()
+    intake_weekday = models.IntegerField(choices=INTAKE_WEEKDAY_CHOICES)
+    intake_hour = models.IntegerField()
+    time_in_shelter_days = models.FloatField()
+    is_mix = models.BooleanField()
+    animal_has_multicolor_fur = models.BooleanField()
+    time_of_day_of_intake = models.IntegerField(choices=TIME_OF_DAY_OF_INTAKE_CHOICES)
+    outcome_type = models.IntegerField(choices=OUTCOME_TYPE_CHOICES)
+
 
 
 
