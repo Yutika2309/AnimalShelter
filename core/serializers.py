@@ -87,3 +87,14 @@ class HomeInspectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeInspectionPreAdoption
         fields = '__all__'
+
+
+class OutcomePredictionSerializer(serializers.ModelSerializer):
+    """
+        description: Serializer for the Outcome prediction
+        created by: @Yutika Rege
+        date: 28th April 2024
+    """
+    class Meta:
+        model = OutcomePrediction
+        fields = '__all__'
