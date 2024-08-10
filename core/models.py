@@ -48,7 +48,8 @@ class ShelterUser(AbstractBaseUser):
 
     email = models.EmailField(unique=True)
     is_staff = models.BooleanField(default=False)
-    name = models.CharField(max_length=50, default=False)
+    name = models.CharField(max_length=50, null=False, blank=False)
+    password = models.CharField(max_length=30, null=False, blank=False)
     usertype = models.CharField(max_length=30, choices=USER_TYPES, default='shelterstaff')
     phone_number = models.CharField(max_length=10, null=False, blank=False)
     location = models.CharField(max_length=20, null=False, blank=False)

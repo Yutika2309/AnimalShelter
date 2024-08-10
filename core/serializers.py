@@ -1,100 +1,75 @@
 from rest_framework import serializers
 from .models import *
+from rest_framework import status
 
 class ShelterUserSerializer(serializers.ModelSerializer):
-    """
-        description: Serializer for the Animal Shelter User
-        created by: @Yutika Rege
-        date: 21st April 2024
-    """
     class Meta:
         model = ShelterUser
-        fields = '__all__'
+        fields = ['email', 'name', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+        def validate(self, data):
+            if len(data['password']) < 8:
+                raise serializers.ValidationError({"password": "must have at least 8 characters"})
+            else:
+                return data
+
+        def create(self, validated_data):
+            user = ShelterUser(
+                email=validated_data['email'],
+                username=validated_data['username']
+            )
+            user.set_password(validated_data['password'])
+            user.save()
+            return user
+        
+        def update(self, instance, validated_data):
+            instance.email = validated_data.get('email', instance.email)
 
 
 class AnimalOnboardingSerializer(serializers.ModelSerializer):
-    """
-        description: Serializer for the Animal onboarding
-        created by: @Yutika Rege
-        date: 21st April 2024
-    """
     class Meta:
         model = AnimalOnboarding
         fields = '__all__'
 
 
 class AnimalHealthSerializer(serializers.ModelSerializer):
-    """
-        description: Serializer for the Animal Health
-        created by: @Yutika Rege
-        date: 21st April 2024
-    """
     class Meta:
         model = AnimalHealth
         fields = '__all__'
 
 
 class PreviousOwnerSerializer(serializers.ModelSerializer):
-    """
-        description: Serializer for the Previous owner information
-        created by: @Yutika Rege
-        date: 21st April 2024
-    """
-    class Meta:
+     class Meta:
         model = PreviousOwnerInfo
         fields = '__all__'
 
 
 class ShelterAssessmentSerializer(serializers.ModelSerializer):
-    """
-        description: Serializer for the Shelter assessment
-        created by: @Yutika Rege
-        date: 21st April 2024
-    """
     class Meta:
         model = ShelterAssessment
         fields = '__all__'
 
 
 class ShelterAssessmentSerializer(serializers.ModelSerializer):
-    """
-        description: Serializer for the Shelter assessment
-        created by: @Yutika Rege
-        date: 21st April 2024
-    """
     class Meta:
         model = ShelterAssessment
         fields = '__all__'
 
 
 class PotentialAdopterInfoSerializer(serializers.ModelSerializer):
-    """
-        description: Serializer for the Potential adopter
-        created by: @Yutika Rege
-        date: 21st April 2024
-    """
     class Meta:
         model = PotentialAdopterInfo
         fields = '__all__'
 
 
 class HomeInspectionSerializer(serializers.ModelSerializer):
-    """
-        description: Serializer for the Home inspection
-        created by: @Yutika Rege
-        date: 21st April 2024
-    """
     class Meta:
         model = HomeInspectionPreAdoption
         fields = '__all__'
 
 
 class OutcomePredictionSerializer(serializers.ModelSerializer):
-    """
-        description: Serializer for the Outcome prediction
-        created by: @Yutika Rege
-        date: 28th April 2024
-    """
     class Meta:
         model = OutcomePrediction
         fields = '__all__'
