@@ -3,3 +3,4 @@ notebooks/.env
 ml_models/
 __pycache__
 postgres_data/
+.DS_STORE
