@@ -82,11 +82,15 @@ DATABASES = {
        'USER': 'postgres',
        'PASSWORD': 'postgres',
        'HOST': 'db', 
-       'PORT': '5433',
+       'PORT': '5434',
    }
 }
 
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',  # Add this line
+    ],
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

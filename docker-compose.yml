@@ -4,10 +4,10 @@ services:
   db:
     image: postgres
     ports:
-      - "5433:5433"
+      - "5434:5434"
     environment:
       - PGHOST=host.docker.internal
-      - PGPORT=5433
+      - PGPORT=5434
       - PGUSER=postgres
       - POSTGRES_DB=animal_shelter_db
       - POSTGRES_PASSWORD=postgres
