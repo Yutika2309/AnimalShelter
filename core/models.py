@@ -4,6 +4,10 @@ from django.contrib.auth.models import (AbstractBaseUser,
                                        PermissionsMixin)
 from django.utils.crypto import get_random_string
 import random
+import string
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 # Create your models here.
 
@@ -12,7 +16,7 @@ import random
 class ShelterUserManager(BaseUserManager):
     """
         description: User manager for the Animal Shelter
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -35,7 +39,7 @@ class ShelterUserManager(BaseUserManager):
 class ShelterUser(AbstractBaseUser):
     """
         description: Creating user for the Animal Shelter
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
 
     USER_TYPES = (
@@ -72,7 +76,7 @@ class ShelterUser(AbstractBaseUser):
 class AnimalOnboarding(models.Model):
     """
         description: Animal registration
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
         
     SPECIES_CHOICES = (
@@ -88,69 +92,114 @@ class AnimalOnboarding(models.Model):
         ('unknown', 'Unknown')
     )
 
+    INTAKE_TYPE_CHOICES = (
+        ('stray', 'Stray'),
+        ('owner_surrender', 'Owner_surrender'),
+        ('public_assist', 'Public_assist'),
+        ('wildlife', 'Wildlife'),
+        ('euthanasia_request', 'Euthanasia_request')
+    )
+
     animal_id = models.CharField(max_length=12, editable=False, unique=True, null=True)
     breed = models.CharField(max_length=30, null=True, blank=True)
-    age_in_years = models.FloatField()
+    intake_type = models.CharField(max_length=50, null=False, blank=False, default='stray')
+    age_in_years = models.FloatField(null=False, blank=False, default=0.0)
+    month_of_intake = models.IntegerField(null=False, blank=False, validators=[MinValueValidator(1), MaxValueValidator(12)], default=5)
     colour = models.CharField(max_length=30, null=True, blank=True)
     species = models.CharField(max_length=30, null=False, choices=SPECIES_CHOICES)
     gender = models.CharField(max_length=30, null=False, choices=GENDER_CHOICES)
-    weight_in_kgs = models.FloatField()
+    weight_in_kgs = models.FloatField(null=False, blank=False, default=0.0)
     distinctive_features = models.CharField(max_length=50, null=True, blank=True)
+    is_mix = models.BooleanField(default=False)
     micro_chipped = models.BooleanField(default=False)
-    animal_photo = models.FileField(upload_to="animal_image/", default=True, null=False)
-    registered_by = models.OneToOneField(ShelterUser, on_delete=models.CASCADE, related_name='registered_animals') #one user can register multiple animals; one-to-many
-    cage_id = models.CharField(max_length=20, unique=True)  #unique Cage ID for the animal
+    registered_by = models.ForeignKey(ShelterUser, on_delete=models.CASCADE, related_name='registered_animals') #one user can register multiple animals; one-to-many
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.animal_id} registered by: {self.registered_by}"
-    
-    def save(self):
-        pass
 
+def generate_random_code():
+    """
+    a random alphanumeric string
+    """
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
+@receiver(pre_save, sender=AnimalOnboarding)
+def set_animal_id(sender, instance, **kwargs):
+    """
+    pre-save django signal to save an unique id against an animal
+    """
+    if not instance.animal_id:
+        species_prefix = instance.species[:3].upper()
+        alphanum_code = generate_random_code()
+        instance.animal_id = f"{species_prefix}-{alphanum_code}"
+
+class AnimalDocuments(models.Model):
+    """
+        description: To account for any documents associated with the animal
+        created_by: Yutika Rege
+    """
+    animal = models.ForeignKey(AnimalOnboarding, on_delete=models.CASCADE, default=None)
+    animal_photo = models.FileField(upload_to="animal_image/", default=None, null=True)
+    other_documents = models.FileField(upload_to="animal_documents/", default=None, null=True)
+
+    def __str__(self, instance):
+        return f'Document for - {self.animal} saved.'
+ 
+        
 class AnimalHealth(models.Model):
     """
         description: Animal health stats
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
-
+    
     OVERALL_HEALTH_STATUS_CHOICES = (
-        ('good', 'Good'),
-        ('fair', 'Fair'),
-        ('poor', 'Poor')
+        ('normal', 'Normal'),
+        ('injured', 'Injured'),
+        ('aged', 'Aged'),
+        ('sick', 'Sick'),
+        ('feral', 'Feral'),
+        ('pregnant', 'Pregnant'),
+        ('nursing', 'Nursing')
     )
 
     VACCINATION_STATUS_CHOICES = (
-        ('upto_date', 'Up-to-date'),
+        ('up_to_date', 'Up_to_date'),
         ('incomplete', 'Incomplete'),
         ('unknown', 'Unknown')
     )
 
     PARASITE_CONTROL_CHOICES = (
-        ('flea_tick_prevention', 'Flea-tick-prevention'),
-        ('Deworming', 'deworming')
+        ('flea_tick_prevention', 'Flea_tick_prevention'),
+        ('deworming', 'Deworming'),
+        ('not_required', 'Not_required')
     )
 
     TEMPERAMENT_CHOICES = (
         ('friendly', 'Friendly'),
         ('shy', 'Shy'),
-        ('aggressive', 'Aggressive')
+        ('aggressive', 'Aggressive'),
+        ('neutral', 'Neutral')
+    )
+
+    NEUTERING_STATUS = (
+        ('intact', 'Intact'),
+        ('neutered', 'Neutered'),
+        ('unknown', 'Unkwown')
     )
 
     animal = models.ForeignKey(AnimalOnboarding, on_delete=models.CASCADE, related_name='health_info') #one specific health record per animal, thus one-to-many (Foreign Key)
-    health_status = models.CharField(max_length=30, null=False, choices=OVERALL_HEALTH_STATUS_CHOICES)
+    intake_condition = models.CharField(max_length=30, null=False, choices=OVERALL_HEALTH_STATUS_CHOICES)
     current_medications = models.CharField(max_length=30, null=True, blank=True)
     is_rabid = models.BooleanField(default=False)
+    neutering_status = models.CharField(max_length=30, null=False, choices=NEUTERING_STATUS, default='unknown')
     known_medical_conditions = models.CharField(max_length=30, null=True, blank=True)
-    vaccination_status = models.CharField(max_length=30, null=False, choices=VACCINATION_STATUS_CHOICES)
-    parasite_control = models.CharField(max_length=30, null=False, choices=PARASITE_CONTROL_CHOICES)
+    vaccination_status = models.CharField(max_length=30, null=False, choices=VACCINATION_STATUS_CHOICES, default='unknown')
+    parasite_control = models.CharField(max_length=30, null=False, choices=PARASITE_CONTROL_CHOICES, default='not_required')
     allergies = models.CharField(max_length=50, null=True, blank=True)
-    temperament = models.CharField(max_length=30, null=False, choices=TEMPERAMENT_CHOICES)
+    temperament = models.CharField(max_length=30, null=False, choices=TEMPERAMENT_CHOICES, default='neutral')
     any_aggresive_incidents = models.BooleanField(default=False)
-    is_neutered = models.BooleanField(default=False)
-    is_injured = models.BooleanField(default=False)
     other_observations = models.TextField(max_length=200, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -158,10 +207,11 @@ class AnimalHealth(models.Model):
     def __str__(self):
         return f"Created instance for: {self.animal}"
 
+
 class PreviousOwnerInfo(models.Model):
     """
         description: Previous owner information
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
 
     INTAKE_REASON_CHOICES = (
@@ -172,10 +222,10 @@ class PreviousOwnerInfo(models.Model):
     )
 
     animal = models.ForeignKey(AnimalOnboarding, on_delete=models.CASCADE, related_name='previous_owner_info')
-    previous_owner_known = models.BooleanField(default=True)
+    previous_owner_known = models.BooleanField(default=False)
     name_of_previous_owner = models.CharField(max_length=50, null=True, blank=True)
     reason_for_intake = models.CharField(max_length=50, null=False, choices=INTAKE_REASON_CHOICES)
-    los_with_owners_in_years = models.FloatField(null=False) #los = Length of stay
+    los_with_owners_in_years = models.FloatField(null=False, default=2.1) #los = Length of stay
     previous_veterinary_clinic = models.TextField(max_length=200, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -187,17 +237,17 @@ class PreviousOwnerInfo(models.Model):
 class ShelterAssessment(models.Model):
     """
         description: Shelter assessment by staff
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
 
     NEXT_STEPS_CHOICES = (
-        ('medical_evaluation', 'Medical-evaluation'),
-        ('behaviour_analysis', 'Behaviour-analysis')
+        ('medical_evaluation', 'Medical_evaluation'),
+        ('behaviour_analysis', 'Behaviour_analysis')
     )
 
     animal = models.ForeignKey(AnimalOnboarding, on_delete=models.CASCADE, related_name='shelter_assessments')
-    cage_id = models.CharField(max_length=20)  #cage ID from AnimalOnboarding
     recommended_next_steps = models.CharField(max_length=100, choices=NEXT_STEPS_CHOICES)  
+    additional_comments = models.TextField(max_length=2000, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -209,7 +259,7 @@ class ShelterAssessment(models.Model):
 class PotentialAdopterInfo(models.Model):
     """
         description: Potential adopter information
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
     
     PREFERRED_SPECIES_CHOICES = (
@@ -236,7 +286,7 @@ class PotentialAdopterInfo(models.Model):
 class HomeInspectionPreAdoption(models.Model):
     """
         description: Vetting of house condition before adoption
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
 
     name_of_inspector = models.ForeignKey(ShelterUser, on_delete=models.CASCADE, null=False)
@@ -255,43 +305,9 @@ class HomeInspectionPreAdoption(models.Model):
 class OutcomePrediction(models.Model):
     """
         description: Model for predicting the outcome for a pet
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
-    ANIMAL_TYPE_CHOICES = [
-        (0, 'Bird'),
-        (1, 'Cat'),
-        (2, 'Dog'),
-        (3, 'Other')
-    ]
-    INTAKE_CONDITION_CHOICES = [
-        (0, 'Injured'),
-        (1, 'Normal'),
-        (2, 'Other'),
-        (3, 'Sick')
-    ]
-    INTAKE_TYPE_CHOICES = [
-        (0, 'Euthanasia Request'),
-        (1, 'Owner Surrender'),
-        (2, 'Public Assist'),
-        (3, 'Stray'),
-        (4, 'Wildlife')
-    ]
-    SEX_UPON_INTAKE_CHOICES = [
-        (0, 'Intact Female'),
-        (1, 'Intact Male'),
-        (2, 'Neutered Male'),
-        (3, 'Spayed Female'),
-        (4, 'Unknown')
-    ]
-    INTAKE_WEEKDAY_CHOICES = [
-        (0, 'Friday'),
-        (1, 'Monday'),
-        (2, 'Saturday'),
-        (3, 'Sunday'),
-        (4, 'Thursday'),
-        (5, 'Tuesday'),
-        (6, 'Wednesday')
-    ]
+    
     OUTCOME_TYPE_CHOICES = [
         (0, 'Adoption'),
         (1, 'Euthanasia'),
@@ -299,26 +315,8 @@ class OutcomePrediction(models.Model):
         (3, 'Return to Owner'),
         (4, 'Transfer')
     ]
-    TIME_OF_DAY_OF_INTAKE_CHOICES = [
-        (0, 'Afternoon'),
-        (1, 'Early morning'),
-        (2, 'Evening'),
-        (3, 'Late morning'),
-        (4, 'Night-time')
-    ]
     
-    animal_type = models.IntegerField(choices=ANIMAL_TYPE_CHOICES)
-    intake_condition = models.IntegerField(choices=INTAKE_CONDITION_CHOICES)
-    intake_type = models.IntegerField(choices=INTAKE_TYPE_CHOICES)
-    sex_upon_intake = models.IntegerField(choices=SEX_UPON_INTAKE_CHOICES)
-    age_upon_intake_years = models.FloatField()
-    intake_month = models.IntegerField()
-    intake_weekday = models.IntegerField(choices=INTAKE_WEEKDAY_CHOICES)
-    intake_hour = models.IntegerField()
-    time_in_shelter_days = models.FloatField()
-    is_mix = models.BooleanField()
-    animal_has_multicolor_fur = models.BooleanField()
-    time_of_day_of_intake = models.IntegerField(choices=TIME_OF_DAY_OF_INTAKE_CHOICES)
+    animal = models.ForeignKey(AnimalOnboarding, on_delete=models.CASCADE, default=None)
     outcome_type = models.IntegerField(choices=OUTCOME_TYPE_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -330,7 +328,7 @@ class OutcomePrediction(models.Model):
 class ChatWithGuidelines(models.Model):
     """
         description: Chat with guidelines (specifically meant for staff)
-        created by: @Yutika Rege
+        created by: Yutika Rege
     """
     user_id = models.ForeignKey(ShelterUser, on_delete=models.CASCADE, null=False, blank=False)
     query = models.TextField(max_length=250, null=False, blank=False)
@@ -346,18 +344,12 @@ class ChatWithGuidelines(models.Model):
 
 
 ## MODELS FOR ADOPTER or OTHER USERS
-class VolunteerSearch(models.Model):
+class AwarenessCreation(models.Model):
     """
-        description: Allows for volunteers to upload info or raise awareness regarding a incident concerning an animal in need
-        created by: @Yutika Rege
+        description: Allows for users to upload info or raise awareness regarding a incident concerning an animal in need
+        created by: Yutika Rege
     """
-    ANIMAL_TYPE = (
-        ('dog', 'Dog'),
-        ('cat', 'Cat'),
-        ('bird', 'Bird'),
-        ('other', 'Other')
-    )
-
+    
     NEED_OF_ATTENTION = (
         ('low', 'Low'),
         ('moderate', 'Moderate'),
@@ -370,17 +362,17 @@ class VolunteerSearch(models.Model):
         ('serious', 'Serious')
     )
 
-    # volunteer_details = models.ForeignKey(ShelterUser, on_delete=models.CASCADE, null=False)
+    user_details = models.ForeignKey(ShelterUser, on_delete=models.CASCADE, null=False)
     animal_onboarding = models.ForeignKey(AnimalOnboarding, on_delete=models.CASCADE)
     found_animal_at_location = models.CharField(max_length=100, null=False, blank=False)
     distinctive_features = models.CharField(max_length=50, null=True, blank=True)
-    animal_health = models.ForeignKey(AnimalHealth, on_delete=models.CASCADE)
+    animal_health = models.ForeignKey(AnimalHealth, on_delete=models.CASCADE, related_name='awarness')
     likely_abandoned = models.BooleanField(default=True)
-    attention_needed = models.CharField(choices=NEED_OF_ATTENTION, default='Medium')
+    attention_needed = models.CharField(choices=NEED_OF_ATTENTION, default='moderate')
     nametag_found = models.BooleanField(default=False)
     additional_comments = models.TextField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
  
     def __str__(self):
-        return self.name_of_volunteer + " found animal of type:" + self.animal_type + " at location:" + self.found_animal_at_location
+        return "Found an animal at location:" + self.found_animal_at_location + "- priority:", self.attention_needed
