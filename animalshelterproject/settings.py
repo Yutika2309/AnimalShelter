@@ -81,8 +81,8 @@ DATABASES = {
        'NAME': 'animal_shelter_db',
        'USER': 'postgres',
        'PASSWORD': 'postgres',
-       'HOST': 'db', 
-       'PORT': '5434',
+       'HOST': 'host.docker.internal', 
+       'PORT': '5433',
    }
 }
 

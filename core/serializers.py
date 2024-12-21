@@ -8,23 +8,23 @@ class ShelterUserSerializer(serializers.ModelSerializer):
         fields = ['email', 'name', 'password']
         extra_kwargs = {'password': {'write_only': True}}
 
-        def validate(self, data):
-            if len(data['password']) < 8:
-                raise serializers.ValidationError({"password": "must have at least 8 characters"})
-            else:
-                return data
+    def validate(self, data):
+        if len(data['password']) < 8:
+            raise serializers.ValidationError({"password": "must have at least 8 characters"})
+        else:
+            return data
 
-        def create(self, validated_data):
-            user = ShelterUser(
-                email=validated_data['email'],
-                username=validated_data['username']
-            )
-            user.set_password(validated_data['password'])
-            user.save()
-            return user
-        
-        def update(self, instance, validated_data):
-            instance.email = validated_data.get('email', instance.email)
+    def create(self, validated_data):
+        user = ShelterUser(
+            email=validated_data['email'],
+            username=validated_data['username']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+    
+    def update(self, instance, validated_data):
+        instance.email = validated_data.get('email', instance.email)
 
 
 class AnimalOnboardingSerializer(serializers.ModelSerializer):

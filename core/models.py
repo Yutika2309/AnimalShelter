@@ -3,17 +3,16 @@ from django.contrib.auth.models import (AbstractBaseUser,
                                        BaseUserManager,
                                        PermissionsMixin)
 from django.utils.crypto import get_random_string
-
+import random
 
 # Create your models here.
 
 
-## MODELS FOR INTERNAL USE
+# MODELS FOR INTERNAL USE
 class ShelterUserManager(BaseUserManager):
     """
         description: User manager for the Animal Shelter
         created by: @Yutika Rege
-        date: 7th April 2024
     """
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -99,20 +98,16 @@ class AnimalOnboarding(models.Model):
     distinctive_features = models.CharField(max_length=50, null=True, blank=True)
     micro_chipped = models.BooleanField(default=False)
     animal_photo = models.FileField(upload_to="animal_image/", default=True, null=False)
-    registered_by = models.ForeignKey(ShelterUser, on_delete=models.CASCADE, related_name='registered_animals') #one user can register multiple animals; one-to-many
+    registered_by = models.OneToOneField(ShelterUser, on_delete=models.CASCADE, related_name='registered_animals') #one user can register multiple animals; one-to-many
     cage_id = models.CharField(max_length=20, unique=True)  #unique Cage ID for the animal
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-        if not self.animal_id:
-            self.animal_id = self.species + "_" + get_random_string(4)
-        if not self.cage_id:
-            self.cage_id = f"CAGE_{self.animal_id}"
-        return super().save(*args, **kwargs)
-
     def __str__(self):
         return f"{self.animal_id} registered by: {self.registered_by}"
+    
+    def save(self):
+        pass
 
 
 class AnimalHealth(models.Model):
@@ -160,9 +155,6 @@ class AnimalHealth(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-        return super(AnimalHealth, self).save(*args, **kwargs)
-
     def __str__(self):
         return f"Created instance for: {self.animal}"
 
@@ -188,9 +180,6 @@ class PreviousOwnerInfo(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-        return super(PreviousOwnerInfo, self).save(*args, **kwargs)
-
     def __str__(self):
         return f"Created instance for: {self.animal}"
 
@@ -211,11 +200,6 @@ class ShelterAssessment(models.Model):
     recommended_next_steps = models.CharField(max_length=100, choices=NEXT_STEPS_CHOICES)  
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        if not self.cage_id:
-            self.cage_id = self.animal.cage_id
-        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Created Cage ID: {self.cage_id}"
@@ -244,9 +228,6 @@ class PotentialAdopterInfo(models.Model):
     is_a_family = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    def save(self, *args, **kwargs):
-        return super(PotentialAdopterInfo, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"Created adopter for: {self.name}"
@@ -266,9 +247,6 @@ class HomeInspectionPreAdoption(models.Model):
     sign_of_applicant = models.FileField(upload_to="applicant_sign/")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        return super(HomeInspectionPreAdoption, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"Created inspection by: {self.name_of_inspector}"
@@ -345,9 +323,6 @@ class OutcomePrediction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-        return super().save(*args, **kwargs)
-
     def __str__(self):
         return f"Outcome: {self.outcome_type}"
 
@@ -362,9 +337,6 @@ class ChatWithGuidelines(models.Model):
     response = models.TextField(max_length=1000, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        return super().save(*args, **kwargs)
 
     def __str__(self):
         if len(self.response) >= 100:
@@ -409,9 +381,6 @@ class VolunteerSearch(models.Model):
     additional_comments = models.TextField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        return super().save(*args, **kwargs)
-    
+ 
     def __str__(self):
         return self.name_of_volunteer + " found animal of type:" + self.animal_type + " at location:" + self.found_animal_at_location
