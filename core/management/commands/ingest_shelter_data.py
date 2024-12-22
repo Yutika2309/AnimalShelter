@@ -23,12 +23,16 @@ class Command(BaseCommand):
                     is_mix = True if row['is_mix'] == 'Yes' else False,
                     registered_by = ShelterUser.objects.get(id=1)
                 )
-    
+
+            ao_obj.save()
+
             ah_obj = AnimalHealth.objects.create(
-                    animal = ao_obj.id,
+                    animal = ao_obj,
                     intake_condition = row['intake_condition'],
                     neutering_status = row['neutering_status'].lower(),
                 )
+
+            ah_obj.save()
 
             self.stdout.write(
                 self.style.SUCCESS(f'DATA INGESTED FOR ANIMAL NO. {index+1}')
