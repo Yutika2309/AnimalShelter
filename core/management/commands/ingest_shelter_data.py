@@ -21,7 +21,7 @@ class Command(BaseCommand):
                     species = row['animal_type'],
                     gender = row['sex_of_animal'].lower(),
                     is_mix = True if row['is_mix'] == 'Yes' else False,
-                    registered_by = ShelterUser.objects.get(id=1)
+                    registered_by = ShelterUser.objects.get(id=16)
                 )
 
             ao_obj.save()

@@ -5,9 +5,10 @@ from django.contrib.auth.models import (AbstractBaseUser,
 from django.utils.crypto import get_random_string
 import random
 import string
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.core.validators import MaxValueValidator, MinValueValidator
+from rest_framework.authtoken.models import Token
 
 # Create your models here.
 
@@ -28,10 +29,6 @@ class ShelterUserManager(BaseUserManager):
         return user
     
     def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_potential_adopter', True)
-        extra_fields.setdefault('is_volunteer', True)
         extra_fields.setdefault('usertype', 'admin')
         return self.create_user(email, password, **extra_fields)
     
@@ -49,11 +46,10 @@ class ShelterUser(AbstractBaseUser):
         ('volunteer', 'Volunteer')
     )
 
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, null=False, blank=False)
     is_staff = models.BooleanField(default=False)
     name = models.CharField(max_length=50, null=False, blank=False)
-    password = models.CharField(max_length=50, null=False, blank=False)
-    usertype = models.CharField(max_length=50, choices=USER_TYPES, default='shelterstaff')
+    usertype = models.CharField(max_length=50, choices=USER_TYPES, default='admin')
     phone_number = models.CharField(max_length=10, null=False, blank=False)
     location = models.CharField(max_length=20, null=False, blank=False)
     new_user = models.BooleanField(default=True)
@@ -66,12 +62,21 @@ class ShelterUser(AbstractBaseUser):
     class Meta:
         ordering = ['created_at']
 
-    def __str__(self):
-        if self.name:
-            return self.name.title()
-        else:
-            return self.email.split('@')[0]
+    def has_perm(self, perm, obj=None):
+        """Does the user have a specific permission?"""
+        return True
 
+    def has_module_perms(self, app_label):
+        """Does the user have permissions to view the app `app_label`?"""
+        return True
+    
+    def __str__(self):
+        return self.email
+
+@receiver(post_save, sender=ShelterUser)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
 
 class AnimalOnboarding(models.Model):
     """
