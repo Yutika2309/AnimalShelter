@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'chat',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -94,6 +95,11 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',  # Add this line
     ],
+}
+
+GRAPH_MODELS ={
+    'all_applications': True,
+    'graph_models': True,
 }
 
 # Password validation
