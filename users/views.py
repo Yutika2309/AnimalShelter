@@ -11,6 +11,7 @@ from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView
 )
+from django.contrib.auth import logout
 from .serializers import SignupSerializer, LoginSerializer
 from core.models import ShelterUser
 
@@ -54,3 +55,11 @@ class LoginView(CreateAPIView):
             return Response({'message':'Logged in successfully.', 'token': token.key}, status=status.HTTP_200_OK)
         else:
             return Response({'error':'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class LogoutView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = [TokenAuthentication]
+
+    def get(self, request):
+        logout(request)
+        return Response({"message":"Logged out successfully."}, status=status.HTTP_200_OK)
