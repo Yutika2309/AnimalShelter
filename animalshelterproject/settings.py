@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'users',
     'animals',
     'chat',
+    'shareNews',
     'rest_framework',
     'rest_framework.authtoken',
     'django_extensions',
@@ -99,6 +100,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',  # Add this line
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100
 }
 
 GRAPH_MODELS ={

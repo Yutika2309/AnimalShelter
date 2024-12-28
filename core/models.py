@@ -212,6 +212,12 @@ class AnimalHealth(models.Model):
     def __str__(self):
         return f"Created instance for: {self.animal}"
 
+    @property
+    def adoptable(self):
+        if self.is_rabid == False and self.vaccination_status != 'unknown':
+            return True
+        else:
+            return False
 
 class PreviousOwnerInfo(models.Model):
     """
